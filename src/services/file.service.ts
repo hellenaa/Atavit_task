@@ -16,6 +16,7 @@ class FileService {
         this.getStats = this.getStats.bind(this);
         this.getGamesStatsData = this.getGamesStatsData.bind(this);
         this.parseGamesData = this.parseGamesData.bind(this);
+        this.parseBestPlayerData = this.parseBestPlayerData.bind(this);
     }
 
 
@@ -144,8 +145,8 @@ class FileService {
 
 
     public parseGamesData(gamesData: Types.GetGamesRes, statsByGames: Types.Stat[]): Types.GetGamesRes {
-        const homePlayerData: any = {};
-        const visitedPlayerData: any = {};
+        let homePlayerData: { [key: string]: any } = {};
+        let visitedPlayerData: { [key: string]: any } = {};
 
         for (const stat of statsByGames) {
             if (!stat.id ||
@@ -157,7 +158,7 @@ class FileService {
                 !stat.player?.last_name
             ) continue;
 
-            const fixedStat: Types.FixStat = {
+            const fixedStat: Types.Stat = {
                 id: stat.id,
                 ast: stat.ast,
                 pts: stat.pts,
@@ -182,50 +183,38 @@ class FileService {
         }
 
 
-
         if (Object.keys(homePlayerData).length > 0 && Object.keys(visitedPlayerData).length > 0) {
-            for (const game in homePlayerData) {
-                let tempStat = homePlayerData[game][0];
 
-                for (const stat of homePlayerData[game]) {
-
-                    if (stat.pts > tempStat.pts) {
-                        tempStat = stat;
-
-                    } else if (stat.pts === tempStat.pts && stat.ast > tempStat.ast) {
-                        tempStat = stat;
-                        tempStat.assists = true;
-                    }
-                }
-                homePlayerData[game] = tempStat;
-            }
-
-
-            for (const game in visitedPlayerData) {
-                let tempStat = visitedPlayerData[game][0];
-
-                for (const stat of visitedPlayerData[game]) {
-
-                    if (stat.pts > tempStat.pts) {
-                        tempStat = stat;
-
-                    } else if (stat.pts === tempStat.pts && stat.ast > tempStat.ast) {
-                        tempStat = stat;
-                        tempStat.assists = true;
-                    }
-                }
-                visitedPlayerData[game] = tempStat;
-            }
-
+            homePlayerData = this.parseBestPlayerData(homePlayerData);
+            visitedPlayerData = this.parseBestPlayerData(visitedPlayerData);
 
             for (const gameData of gamesData.data) {
                 if (visitedPlayerData[gameData.id]) gameData.visited_best_player = visitedPlayerData[gameData.id];
                 if (homePlayerData[gameData.id]) gameData.home__best_player = homePlayerData[gameData.id];
             }
-
         }
 
         return gamesData;
+    }
+
+
+    private parseBestPlayerData(playerData: { [key: string]: any }): { [key: string]: any } {
+        for (const game in playerData) {
+            let tempStat = playerData[game][0];
+
+            for (const stat of playerData[game]) {
+
+                if (stat.pts > tempStat.pts) {
+                    tempStat = stat;
+
+                } else if (stat.pts === tempStat.pts && stat.ast > tempStat.ast) {
+                    tempStat = stat;
+                    tempStat.assists = true;
+                }
+            }
+            playerData[game] = tempStat;
+        }
+        return playerData;
     }
 
 

@@ -33,16 +33,9 @@ export namespace Types {
         ast: number;
         pts: number;
         team: { id: number };
-        game: { id: number; home_team_id: number; visitor_team_id: number };
-        player: { id: number; first_name: string, last_name: string };
+        game?: { id: number; home_team_id: number; visitor_team_id: number };
+        player: { id: number; first_name?: string, last_name?: string, fullName?: string };
+        assists?: boolean;
     }
 
-    export interface FixStat {
-        id: number;
-        ast: number;
-        pts: number;
-        assists?: boolean;
-        team: { id: number };
-        player: { id: number; fullName: string };
-    }
 }
